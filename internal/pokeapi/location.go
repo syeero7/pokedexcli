@@ -35,11 +35,11 @@ func GetLocationList(endpoint *string, cache *pokecache.Cache) (LocationList, er
 		return LocationList{}, err
 	}
 
-	cache.Add(url, body)
 	if err := json.Unmarshal(body, &locations); err != nil {
 		return LocationList{}, err
 	}
 
+	cache.Add(url, body)
 	return locations, nil
 }
 
@@ -64,11 +64,11 @@ func GetFoundPokemon(location string, cache *pokecache.Cache) (FoundPokemon, err
 		return FoundPokemon{}, err
 	}
 
-	cache.Add(url, body)
 	if err := json.Unmarshal(body, &pokemon); err != nil {
 		return FoundPokemon{}, err
 	}
 
+	cache.Add(url, body)
 	return pokemon, nil
 
 }
