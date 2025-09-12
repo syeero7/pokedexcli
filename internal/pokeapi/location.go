@@ -42,3 +42,33 @@ func GetLocationList(endpoint *string, cache *pokecache.Cache) (LocationList, er
 
 	return locations, nil
 }
+
+func GetFoundPokemon(location string, cache *pokecache.Cache) (FoundPokemon, error) {
+	url := fmt.Sprintf("%s/location-area/%s", apiURL, location)
+	pokemon := FoundPokemon{}
+	if data, ok := cache.Get(url); ok {
+		if err := json.Unmarshal(data, &pokemon); err != nil {
+			return FoundPokemon{}, err
+		}
+		return pokemon, nil
+	}
+
+	res, err := http.Get(url)
+	if err != nil {
+		return FoundPokemon{}, err
+	}
+
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return FoundPokemon{}, err
+	}
+
+	cache.Add(url, body)
+	if err := json.Unmarshal(body, &pokemon); err != nil {
+		return FoundPokemon{}, err
+	}
+
+	return pokemon, nil
+
+}
