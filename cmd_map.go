@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/syeero7/pokedexcli/internal/pokecache"
 )
 
-type Config struct {
+type pokemonLocations struct {
 	Next     *string   `json:"next"`
 	Previous *string   `json:"previous"`
 	Results  []Results `json:"results"`
@@ -19,19 +21,19 @@ type Results struct {
 }
 
 func commandMap(c *Config) error {
-	if (*c).Next == nil {
+	if (*c).nextLocationURL == nil {
 		return fmt.Errorf("map unavailable")
 	}
 
-	config, err := getPokemonLocations(*c.Next)
+	locations, err := getPokemonLocations(*c.nextLocationURL, c.pokecache)
 	if err != nil {
 		return fmt.Errorf("failed to fetch pokemon areas: %w", err)
 	}
 
-	(*c).Next = config.Next
-	(*c).Previous = config.Previous
+	(*c).nextLocationURL = locations.Next
+	(*c).prevLocationURL = locations.Previous
 
-	for _, result := range config.Results {
+	for _, result := range locations.Results {
 		fmt.Println(result.Name)
 	}
 
@@ -39,40 +41,51 @@ func commandMap(c *Config) error {
 }
 
 func commandMapb(c *Config) error {
-	if (*c).Previous == nil {
+	if (*c).prevLocationURL == nil {
 		return fmt.Errorf("mapb unavailable")
 	}
 
-	config, err := getPokemonLocations(*c.Previous)
+	locations, err := getPokemonLocations(*c.prevLocationURL, c.pokecache)
 	if err != nil {
 		return fmt.Errorf("failed to fetch pokemon areas: %w", err)
 	}
 
-	(*c).Next = config.Next
-	(*c).Previous = config.Previous
+	(*c).nextLocationURL = locations.Next
+	(*c).prevLocationURL = locations.Previous
 
-	for _, result := range config.Results {
+	for _, result := range locations.Results {
 		fmt.Println(result.Name)
 	}
 
 	return nil
 }
 
-func getPokemonLocations(url string) (Config, error) {
+func getPokemonLocations(url string, cache *pokecache.Cache) (pokemonLocations, error) {
+	data := pokemonLocations{}
+
+	if cachedData, ok := (*cache).Get(url); ok {
+
+		if err := json.Unmarshal(cachedData, &data); err != nil {
+			return pokemonLocations{}, err
+		}
+
+		return data, nil
+	}
+
 	res, err := http.Get(url)
 	if err != nil {
-		return Config{}, err
+		return pokemonLocations{}, err
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return Config{}, err
+		return pokemonLocations{}, err
 	}
 
-	data := Config{}
+	(*cache).Add(url, body)
 	if err := json.Unmarshal(body, &data); err != nil {
-		return Config{}, err
+		return pokemonLocations{}, err
 	}
 
 	return data, nil
