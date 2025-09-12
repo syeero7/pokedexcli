@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/syeero7/pokedexcli/internal/pokecache"
 )
@@ -19,7 +18,8 @@ type cliCommand struct {
 type Config struct {
 	nextLocationURL *string
 	prevLocationURL *string
-	pokecache       *pokecache.Cache
+	arguments       []string
+	cache           *pokecache.Cache
 }
 
 func cleanInput(text string) []string {
@@ -28,14 +28,8 @@ func cleanInput(text string) []string {
 	return strings.Fields(trimmed)
 }
 
-func startREPL() {
+func startREPL(cfg *Config) {
 	scanner := bufio.NewScanner(os.Stdin)
-	locationURL := "https://pokeapi.co/api/v2/location-area/"
-	config := Config{
-		nextLocationURL: &locationURL,
-		prevLocationURL: nil,
-		pokecache:       pokecache.NewCache(5 * time.Second),
-	}
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -45,13 +39,14 @@ func startREPL() {
 			continue
 		}
 
+		cfg.arguments = words[1:]
 		command, ok := getCommands()[words[0]]
 		if !ok {
 			fmt.Printf("Unknown command %s\n", words[0])
 			continue
 		}
 
-		err := command.callback(&config)
+		err := command.callback(cfg)
 		if err != nil {
 			fmt.Println(err)
 		}
