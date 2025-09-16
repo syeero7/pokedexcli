@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	config := Config{cache: pokecache.NewCache(5 * time.Minute)}
+	config := Config{cache: pokecache.NewCache(5 * time.Minute), pokedex: make(map[string]struct{})}
 	startREPL(&config)
 }

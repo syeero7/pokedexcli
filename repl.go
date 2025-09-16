@@ -20,6 +20,7 @@ type Config struct {
 	prevLocationURL *string
 	arguments       []string
 	cache           *pokecache.Cache
+	pokedex         map[string]struct{}
 }
 
 func cleanInput(text string) []string {

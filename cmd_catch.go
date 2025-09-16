@@ -23,6 +23,7 @@ func commandCatch(cfg *Config) error {
 	catchStr := "escaped"
 	if pokemon.BaseExperience <= rand.IntN(pokemon.BaseExperience*2) {
 		catchStr = "was caught"
+		cfg.pokedex[pokemonName] = struct{}{}
 	}
 	fmt.Printf("%s %s!\n", pokemonName, catchStr)
 
